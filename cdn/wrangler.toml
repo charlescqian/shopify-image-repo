@@ -1,0 +1,6 @@
+name = "cdn"
+type = "javascript"
+account_id = "2f9a89b06d6d0af0d97dad5915c01010"
+workers_dev = true
+route = ""
+zone_id = ""
