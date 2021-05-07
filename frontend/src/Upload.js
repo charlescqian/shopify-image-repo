@@ -34,16 +34,22 @@ class Upload extends Component {
     handleSave(files) {
         //Saving files to state for further use and closing Modal.
         console.log(files);
-
+        console.log(files[0].name);
         this.setState({
             files: files,
             open: false
         });
+        
+        let data = new FormData();
+        for (let i = 0; i < files.length; i++ ) {
+            data.append("images", files[i])
+        }
+        
 
         const requestOptions = {
             method: 'POST',
             // headers: { 'Accept': 'application/json' },
-            body: files,
+            body: data,
         }
         console.log(requestOptions);
         
@@ -70,6 +76,9 @@ class Upload extends Component {
  
     render() {
         const { classes } = this.props;
+        const inputProps = {
+            name: "images"
+        };
         return (
             <main>
                 <div className={classes.heroContent}>
@@ -97,6 +106,7 @@ class Upload extends Component {
                                     maxFileSize={5000000}
                                     onClose={this.handleClose.bind(this)}
                                     filesLimit={10}
+                                    inputProps={inputProps}
                                 />
                             </Grid>
                         </Grid>
