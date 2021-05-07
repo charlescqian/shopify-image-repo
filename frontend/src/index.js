@@ -3,10 +3,16 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 import Album from './Album';
+import Upload from './Upload';
+import Navbar from './Navbar';
+import Footer from './Footer';
 
 ReactDOM.render(
   <React.StrictMode>
+    <Navbar />
+    <Upload />
     <Album />
+    <Footer />
   </React.StrictMode>,
   document.getElementById('root')
 );
