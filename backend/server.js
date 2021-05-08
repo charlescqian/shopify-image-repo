@@ -6,7 +6,8 @@ const { format } = require('util');
 
 const app = express();
 const port = process.env.PORT || 5000;
-const storage = new Storage();
+const gc = require('./config/')
+
 let path = require("path");
 
 const dbName = "images";
@@ -22,7 +23,7 @@ const upload = multer({
     },
 });
 
-const bucket = storage.bucket('image-repo-charles');
+const bucket = gc.bucket('image-repo-charles');
 
 MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(client => {
@@ -36,13 +37,15 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
         // // })
         /*
          * Get recent images uploaded by all users
-         *
+         * TODO: Should pull the X most recent pictures (X=20?) and sort them by upload time
          */
         app.get('/api/images/recent', (req, res) => {
             console.log('Get recent images API Called');
-            collection.find({}).toArray()
+            collection.find({}).sort({uploadTime:-1}).limit(20).toArray()
                 .then(result => {
                     console.log(result);
+                    const sortedResult = result.sort((a, b) => b.uploadTime - a.uploadTime)
+                    console.log(sortedResult)
                     res.send(result);
                 })
                 .catch(error => console.error(error))
@@ -51,31 +54,44 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
         app.post('/api/upload', upload.array("images", 10), (req, res, next) => {
             console.log('Upload API called');
             console.log(req.files);
-            console.log(req.file);
-            console.log(req.body);
-            console.log(req.params);
-            console.log(req.headers);
+
             if (!req.files) {
                 res.status(400).send('No file uploaded.');
-                console.log('bleh');
                 return;
             }
             
-            // const blob = bucket.file(req.file.name);
-            // const blobStream = blob.createWriteStream();
+            req.files.forEach(file => {
+                const blob = bucket.file(`images/${file.originalname}`);
+                const blobStream = blob.createWriteStream();
+                
+                // TODO: Error handling and return proper status for the uploads
+                // Should it return an error if any file fails to upload?
+                blobStream.on('error', err => {
+                    next(err);
+                });
 
-            // blobStream.on('error', err => {
-            //     next(err);
-            // });
+                blobStream.on('finish', () => {
+                    const publicUrl = format(
+                        `https://storage.googleapis.com/${bucket.name}/${blob.name}`
+                    );
+                    res.status(200).send(publicUrl);
+                });
 
-            // blobStream.on('finish', () => {
-            //     const publicUrl = format(
-            //         `https://storage.googleapis.com/${bucket.name}/${blob.name}`
-            //     );
-            //     res.status(200).send(publicUrl);
-            // });
+                blobStream.end(file.buffer);
 
-            // blobStream.end(req.file.buffer);
+                // Add File metadata to DB
+                let image = { 
+                    path: `images/${file.originalname}`, 
+                    owner: "cqian",
+                    uploadTime: new Date()
+                }
+
+                collection.insertOne(image, (err, res) => {
+                    if (err) throw err;
+                    console.log("Document inserted");
+                });
+            })
+            
         })
         
         app.listen(port, () =>

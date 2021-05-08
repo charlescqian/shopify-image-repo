@@ -13,7 +13,7 @@ const styles = theme => ({
     },
     heroButtons: {
         marginTop: theme.spacing(4),
-    },
+    }
 })
 
 class Upload extends Component {
@@ -44,28 +44,26 @@ class Upload extends Component {
         for (let i = 0; i < files.length; i++ ) {
             data.append("images", files[i])
         }
-        
 
         const requestOptions = {
             method: 'POST',
-            // headers: { 'Accept': 'application/json' },
             body: data,
         }
         console.log(requestOptions);
         
         fetch('/api/upload', requestOptions)
-        // .then(async res => {
-        //     if (res.status !== 200) {
-        //         const data = await res.json();
+        .then(async res => {
+            if (res.status !== 200) {
+                const data = await res.json();
 
-        //         console.log(res.status);
-        //         const error = (data && data.message) || res.status;
-        //         console.log(error);
-        //     }
-        // })
-        // .catch(error => {
-        //     console.error(error);
-        // })
+                console.log(res.status);
+                const error = (data && data.message) || res.status;
+                console.log(error);
+            }
+        })
+        .catch(error => {
+            console.error(error);
+        })
     }
  
     handleOpen() {
@@ -103,10 +101,11 @@ class Upload extends Component {
                                     onSave={this.handleSave.bind(this)}
                                     acceptedFiles={['image/jpeg', 'image/png', 'image/bmp']}
                                     showPreviews={true}
-                                    maxFileSize={5000000}
+                                    maxFileSize={10*1024*1024}
                                     onClose={this.handleClose.bind(this)}
                                     filesLimit={10}
                                     inputProps={inputProps}
+                                    maxWidth='md'
                                 />
                             </Grid>
                         </Grid>
