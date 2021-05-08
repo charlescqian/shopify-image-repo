@@ -87,7 +87,7 @@ class Upload extends Component {
                     <Typography variant="h5" align="center" color="textSecondary" paragraph>
                         This is Charles Qian's submission to the Shopify Developer Intern Challenge. This application is built on the MERN stack.
                         The images are stored on GCP and a Cloudflare Worker is used as a CDN to serve the images.
-                        Click on the button below to upload an image.
+                        Click on the button below to upload an image, then click on "Recent" to load the image.
                     </Typography>
                     <div className={classes.heroButtons}>
                         <Grid container spacing={2} justify="center">

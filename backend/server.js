@@ -14,12 +14,14 @@ const dbName = "images";
 const colName = "images";
 const uri = "mongodb+srv://dbAdmin:hello123@cluster0.p11mw.mongodb.net/images?retryWrites=true&w=majority";
 
-// app.use(express.json());
+const MAX_NO_IMGS = 10;
+const MAX_IMG_SIZE = 20 * 1024 * 1024; // 20 MB
+app.use(express.json());
 
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
-        fileSize: 20 * 1024 * 1024, // no larger than 20 MB
+        fileSize: MAX_IMG_SIZE, // no larger than 20 MB
     },
 });
 
@@ -44,14 +46,28 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
             collection.find({}).sort({uploadTime:-1}).limit(20).toArray()
                 .then(result => {
                     console.log(result);
-                    const sortedResult = result.sort((a, b) => b.uploadTime - a.uploadTime)
-                    console.log(sortedResult)
                     res.send(result);
                 })
                 .catch(error => console.error(error))
         })
         
-        app.post('/api/upload', upload.array("images", 10), (req, res, next) => {
+        /*
+         * Endpoint for getting top 20 most liked pictures
+         */
+        app.get('/api/images/mostliked', (req, res) => {
+            console.log('Get most liked images API called');
+            collection.find({}).sort({likes: -1}).limit(20).toArray()
+                .then(result => {
+                    console.log(result);
+                    res.send(result);
+                })
+                .catch(error => console.error(error))
+        })
+
+        /*
+         * Endpoint for uploading new pictures, 
+         */
+        app.post('/api/upload', upload.array("images", MAX_NO_IMGS), (req, res, next) => {
             console.log('Upload API called');
             console.log(req.files);
 
@@ -82,8 +98,9 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
                 // Add File metadata to DB
                 let image = { 
                     path: `images/${file.originalname}`, 
-                    owner: "cqian",
-                    uploadTime: new Date()
+                    owner: "cqian", // Placeholder, should be whichever user uploads the file, when authentication is added
+                    uploadTime: new Date(),
+                    likes: 0
                 }
 
                 collection.insertOne(image, (err, res) => {
@@ -92,6 +109,24 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
                 });
             })
             
+        })
+
+        /*
+         * Endpoint to increment 'likes' value
+         */
+        app.post('/api/like', (req, res, next) => {
+            console.log("LIKE API Called");
+            console.log(req.body.path)
+            collection.updateOne(
+                { path: `${req.body.path}` },
+                { $inc: {likes: 1} })
+                .then( result => {
+                    res.status(200).send(result);
+                })
+                .catch(error => {
+                    console.error(error);
+                    next(err);
+                })
         })
         
         app.listen(port, () =>

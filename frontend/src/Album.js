@@ -1,27 +1,25 @@
 import React, { Component } from 'react';
-import { withStyles, makeStyles } from '@material-ui/core/styles';
-
+import { withStyles } from '@material-ui/core/styles';
 import Button from '@material-ui/core/Button';
-
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
-
 import CardMedia from '@material-ui/core/CardMedia';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
-
-import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
-import Link from '@material-ui/core/Link';
 import Dialog from '@material-ui/core/Dialog';
 import DialogContent from '@material-ui/core/DialogContent';
+import { setCookie, checkCookies } from './CookieHandlers';
+import FavoriteIcon from '@material-ui/icons/Favorite';
+import IconButton from '@material-ui/core/IconButton';
+import ButtonGroup from '@material-ui/core/ButtonGroup';
 
 const cdnUrl = 'https://cdn.charlesqian.workers.dev/';
 
 const styles = theme => ({
 
   cardGrid: {
-    paddingTop: theme.spacing(8),
+    paddingTop: theme.spacing(4),
     paddingBottom: theme.spacing(8),
   },
   card: {
@@ -35,9 +33,6 @@ const styles = theme => ({
   cardContent: {
     flexGrow: 1,
   },
-  image: {
-    
-  }
 });
 
 class AlbumPage extends Component {
@@ -46,16 +41,38 @@ class AlbumPage extends Component {
     this.state = {
       images: [],
       open: false,
-      dialogImagePath: ''
+      dialogImagePath: '',
+      likes: []
     }
 
     this.handleOpen = this.handleOpen.bind(this);
     this.handleClose = this.handleClose.bind(this);
+    this.handleLike = this.handleLike.bind(this);
+    this.fetchRecentImages = this.fetchRecentImages.bind(this);
+    this.fetchMostLikedImages = this.fetchMostLikedImages.bind(this);
   }
 
-  componentDidMount() {
-
+  fetchRecentImages() {
     fetch(`/api/images/recent`)
+    .then(async res => {
+      const data = await res.json();
+
+      if(res.status !== 200) {
+        console.log(res.status);
+        const error = (data && data.message) || res.statusText;
+        return Promise.reject(error);
+      }
+
+      let likes = data.map(function(x) { return x.likes });
+      this.setState({images: data, likes: likes})
+    })
+    .catch(error => {
+      console.error(error);
+    })
+  }
+
+  fetchMostLikedImages() {
+    fetch(`/api/images/mostliked`)
     .then(async res => {
       const data = await res.json();
 
@@ -72,6 +89,10 @@ class AlbumPage extends Component {
     })
   }
 
+  componentDidMount() {
+    this.fetchRecentImages();
+  }
+
   handleOpen(image) {
     this.setState({open: true, dialogImagePath: image.path});
   }
@@ -80,14 +101,70 @@ class AlbumPage extends Component {
     this.setState({open: false});
   }
 
+  handleLike(image) {
+
+    // Checks if the cookie is set
+    if (checkCookies()) {
+      // If it is set, then don't increment like count and show an alert saying the user
+      // can like 1 photo every hour
+      window.alert('Only one LIKE is allowed per hour.');
+    } else {
+      // If it is not set, set it and increase like count by 1
+      setCookie();
+      
+      // Send a post request to update 
+      const requestOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({path: image.path}),
+      }
+  
+      fetch(`/api/like`, requestOptions)
+      .then(async res => {
+        if(res.status >= 400) {
+          console.log(res.status);
+          // TODO: Error handling
+        }
+        
+        this.incrementLikes(image);
+      })
+      .catch(error => {
+        console.error(error);
+      })
+
+    }
+
+  }
+
+  incrementLikes(image) {
+    let idx = this.state.images.findIndex(x => x.path === image.path)
+    console.log(idx);
+    let imgs = this.state.images;
+    let img = imgs[idx];
+    img.likes += 1;
+    imgs[idx] = img;
+    this.setState({images: imgs});
+  }
+
   render() {
     const { classes } = this.props;
 
     return (
       <React.Fragment>
         <CssBaseline/>
-        <main>
+        <main>  
+          
           <Container className={classes.cardGrid} maxWidth="lg">
+            <div style={{justifyContent: 'center', padding:'0em 2em 1em 0.5em'}}>
+                <ButtonGroup variant="contained" color="primary">
+                  <Button onClick={this.fetchRecentImages}>
+                    Recent
+                  </Button>
+                  <Button onClick={this.fetchMostLikedImages}>
+                    Most Liked
+                  </Button>
+                </ButtonGroup>
+            </div>
             <Grid container spacing={4}>
               {this.state.images.map((image) => (
                 <Grid item key={image} xs={12} sm={6} >
@@ -101,21 +178,26 @@ class AlbumPage extends Component {
                       <Button size="small" color="primary" onClick={() => this.handleOpen(image)}>
                         View
                       </Button>
-                      <Button size="small" color="primary">
-                        Like
-                      </Button>
+                      <IconButton onClick={() => this.handleLike(image)}>
+                        <FavoriteIcon color="secondary"/>
+                      </IconButton>
+                      <div>
+                        {image.likes}
+                      </div>
                     </CardActions>
                   </Card>
                 </Grid>
               ))}
+              {/* TODO: Use Media Queries or something to make the Dialog maxWidth responsive */}
                 <Dialog
                   open={this.state.open}
                   onClose={this.handleClose}
-                  fullWidth={true}
+                  fullWidth={false}
+                  maxWidth='sm'
                   style={{maxWidth: '100%', maxHeight: '100%'}}
                 > 
                   <DialogContent>
-                    <img src={cdnUrl + this.state.dialogImagePath} style={{width: '100%', height: '100%'}}/>
+                    <img src={cdnUrl + this.state.dialogImagePath} style={{width: '100%', height: '100%'}} alt={this.state.dialogImagePath}/>
                   </DialogContent>
                 </Dialog>
             </Grid>
