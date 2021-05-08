@@ -20,13 +20,12 @@ async function serveAsset(event) {
   return response
 }
 /**
- * Respond with hello worker text
- * @param {Request} request
+ * @param {event} event
  */
 async function handleRequest(event) {
   if (event.request.method === "GET") {
     let response = await serveAsset(event)
-    if (response.status > 399) {
+    if (response.status >= 400) {
       response = new Response(response.statusText, { status: response.status })
     }
     return response
