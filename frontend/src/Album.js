@@ -13,6 +13,8 @@ import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import Container from '@material-ui/core/Container';
 import Link from '@material-ui/core/Link';
+import Dialog from '@material-ui/core/Dialog';
+import DialogContent from '@material-ui/core/DialogContent';
 
 const cdnUrl = 'https://cdn.charlesqian.workers.dev/';
 
@@ -33,6 +35,9 @@ const styles = theme => ({
   cardContent: {
     flexGrow: 1,
   },
+  image: {
+    
+  }
 });
 
 class AlbumPage extends Component {
@@ -40,7 +45,12 @@ class AlbumPage extends Component {
     super(props);
     this.state = {
       images: [],
+      open: false,
+      dialogImagePath: ''
     }
+
+    this.handleOpen = this.handleOpen.bind(this);
+    this.handleClose = this.handleClose.bind(this);
   }
 
   componentDidMount() {
@@ -62,8 +72,17 @@ class AlbumPage extends Component {
     })
   }
 
+  handleOpen(image) {
+    this.setState({open: true, dialogImagePath: image.path});
+  }
+
+  handleClose() {
+    this.setState({open: false});
+  }
+
   render() {
     const { classes } = this.props;
+
     return (
       <React.Fragment>
         <CssBaseline/>
@@ -79,16 +98,26 @@ class AlbumPage extends Component {
                       title="Image title"
                     />
                     <CardActions>
-                      <Button size="small" color="primary">
+                      <Button size="small" color="primary" onClick={() => this.handleOpen(image)}>
                         View
                       </Button>
                       <Button size="small" color="primary">
-                        Edit
+                        Like
                       </Button>
                     </CardActions>
                   </Card>
                 </Grid>
               ))}
+                <Dialog
+                  open={this.state.open}
+                  onClose={this.handleClose}
+                  fullWidth={true}
+                  style={{maxWidth: '100%', maxHeight: '100%'}}
+                > 
+                  <DialogContent>
+                    <img src={cdnUrl + this.state.dialogImagePath} style={{width: '100%', height: '100%'}}/>
+                  </DialogContent>
+                </Dialog>
             </Grid>
           </Container>
         </main>

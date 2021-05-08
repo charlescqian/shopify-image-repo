@@ -6,10 +6,11 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { withStyles } from '@material-ui/core';
 
+
 const styles = theme => ({
     appBar: {
         backgroundColor: "primary",
-    }
+    },
 })
 class Navbar extends Component {
     
@@ -24,6 +25,7 @@ class Navbar extends Component {
                         <Typography variant="h6" color="inherit" noWrap>
                             Shopify Intern Challenge
                         </Typography>
+                        {/* TODO: Search Bar? */}
                     </Toolbar>
                 </AppBar>
             </React.Fragment>
