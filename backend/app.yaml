@@ -1,5 +1,8 @@
 runtime: nodejs
+
 env: flex
+
+service: api
 
 env_variables:
   GCLOUD_STORAGE_BUCKET: image-repo-charles

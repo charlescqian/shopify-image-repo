@@ -32,11 +32,11 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
         console.log("Successfully connected to Database")
         const collection = client.db(dbName).collection(colName);
 
-        // app.use(express.static(path.join(__dirname, '../frontend/build')));
+        app.use(express.static(path.join(__dirname, '../frontend/build')));
 
-        // // app.get('/', (req, res) => {
-        // //     res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-        // // })
+        app.get('/', (req, res) => {
+            res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
+        })
         /*
          * Get recent images uploaded by all users
          * TODO: Should pull the X most recent pictures (X=20?) and sort them by upload time
@@ -66,6 +66,7 @@ MongoClient.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true })
 
         /*
          * Endpoint for uploading new pictures, 
+         * TODO: Handle files with the same filename
          */
         app.post('/api/upload', upload.array("images", MAX_NO_IMGS), (req, res, next) => {
             console.log('Upload API called');
