@@ -7,7 +7,3 @@ handlers:
   
   - url: /
     static_dir: build
-
-endpoints_api_service:
-  name: api-dot-concrete-zephyr-312801.uc.r.appspot.com
-  rollout_strategy: managed
