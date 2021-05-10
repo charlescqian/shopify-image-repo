@@ -34,7 +34,6 @@ class Upload extends Component {
     handleSave(files) {
         //Saving files to state for further use and closing Modal.
         console.log(files);
-        console.log(files[0].name);
         this.setState({
             files: files,
             open: false

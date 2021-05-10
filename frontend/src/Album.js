@@ -121,9 +121,13 @@ class AlbumPage extends Component {
   
       fetch(`/api/like`, requestOptions)
       .then(async res => {
+        const data = await res.json();
+
         if(res.status >= 400) {
           console.log(res.status);
           // TODO: Error handling
+          const error = (data && data.message) || res.statusText;
+          return Promise.reject(error);
         }
         
         this.incrementLikes(image);
